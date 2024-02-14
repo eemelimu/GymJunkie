@@ -17,7 +17,7 @@ import { DrawerContent } from "./components/DrawerContent";
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
-const CustomHeader = ({navigation}) => {
+const CustomHeader = ({ navigation }) => {
   const handleDrawer = () => {
     navigation.openDrawer();
   };

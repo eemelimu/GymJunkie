@@ -55,12 +55,12 @@ const Preferences = () => {
 
         <TouchableOpacity
           style={styles.checkboxItem}
-          onPress={() => setSelectedSkill("Professional")}
+          onPress={() => setSelectedSkill("Expert")}
         >
           <CheckBox
             style={styles.checkbox}
-            value={selectedSkill === "Professional"}
-            onValueChange={() => setSelectedSkill("Professional")} 
+            value={selectedSkill === "Expert"}
+            onValueChange={() => setSelectedSkill("Expert")} 
             color="#DB8300"
           />
           <Text style={styles.skills}>Professional</Text>

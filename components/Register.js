@@ -10,22 +10,22 @@ const Register = () => {
   const navigation = useNavigation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
-  // add unit & experience
-  // add password2
 
   const registerUser = async () => {
     try {
       const response = await axios.post('http://localhost:8000/register', {
         username: username,
         password: password,
+        confirmPassword: confirmPassword,
         email: email,
-        unit: "metric", // remove hard coding
+        unit: "metric",
         experience: "beginner"
       });
       
       console.log(response.status);
-      navigation.navigate("Login"); // navigate to login page or homescreen?
+      navigation.navigate("Login");
     } catch (error) {
       console.error('Error registering user:', error);
     }
@@ -65,6 +65,8 @@ const Register = () => {
         style={styles.passwordInput}
         placeholder = "    Enter password..."
         secureTextEntry={true}
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
       />
       <Text style={styles.information}> E-Mail </Text>
       <TextInput

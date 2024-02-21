@@ -19,6 +19,9 @@ import Preferences2 from "./components/Preferences2";
 import Register from "./components/Register";
 import { useAuth } from "./components/AuthContext";
 import { Workout } from "./components/Workout";
+import  Routines  from "./components/Routines";
+import InspectRoutine from "./components/InspectRoutine";
+
 
 const Stack = createStackNavigator();
 
@@ -42,11 +45,10 @@ const CustomHeader = ({ navigation, title, showMenuButton }) => {
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>
-      {" "}
       <NavigationContainer>
         <AuthProvider>
           <Stack.Navigator
-            initialRouteName={"Login"}
+            initialRouteName={"Routines"}
             screenOptions={({ navigation, route }) => ({
               header: () => (
                 <CustomHeader
@@ -57,13 +59,10 @@ export default function App() {
               ),
             })}
           >
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Workout" component={Workout} />
-            <Stack.Screen name="Goals" component={GoalsPage} />
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Preferences" component={Preferences} />
-            <Stack.Screen name="Preferences2" component={Preferences2} />
-            <Stack.Screen name="Register" component={Register} />
+       
+            <Stack.Screen name="Routines" component={Routines} />
+            <Stack.Screen name="InspectRoutine" component={InspectRoutine} />
+          
           </Stack.Navigator>
         </AuthProvider>
       </NavigationContainer>

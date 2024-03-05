@@ -15,6 +15,9 @@ import { useAuth } from "./AuthContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { ThemeColors } from "../assets/ThemeColors";
+import { Entypo } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
+import { Camera } from "expo-camera";
 
 // TODO:
 // - Video
@@ -28,7 +31,13 @@ import { ThemeColors } from "../assets/ThemeColors";
 // - Workout automaattinen nimen luonti: Ottaa jokaisen liikkeen kategorian ja listaa sen nimeen
 
 export const Workout = () => {
-  const [name, setName] = useState("");
+  const [name, setName] = useState(
+    `Workout of ${new Date().toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    })}`
+  );
+
   const [notes, setNotes] = useState("");
   const [selectedMovement, setSelectedMovement] = useState(null);
   const [movements, setMovements] = useState([]);
@@ -93,7 +102,6 @@ export const Workout = () => {
         workout.sets.every((set) => set.weight !== "" && set.reps !== "")
       );
     });
-    console.log(allWorkoutsHaveSets);
     workoutData.length > 0 && allWorkoutsHaveSets
       ? setInProgress(true)
       : setInProgress(false);
@@ -114,7 +122,7 @@ export const Workout = () => {
             movement_id: movement.id,
             weight: sets.weight,
             reps: sets.reps,
-            video: "",
+            video: sets.video,
             time: 0,
           }),
         }
@@ -128,7 +136,6 @@ export const Workout = () => {
 
   const handleFinishWorkout = async () => {
     if (inProgress) {
-      // name === "" && setName(`${timeOfDay} Workout`);
       try {
         const exerciseId = await createExercise(name, notes);
         await Promise.all(
@@ -165,19 +172,6 @@ export const Workout = () => {
       console.log("Error fetching movements: ", error);
     }
   }, []);
-
-  const NoMovements = () => {
-    const handleLoadMovements = () => {
-      console.log("Loading movements");
-    };
-    return (
-      <View>
-        <TouchableOpacity onPress={handleLoadMovements}>
-          <Text>No movements available</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
 
   useEffect(() => {
     const currentTime = new Date().getHours();
@@ -275,7 +269,8 @@ const SingleMovement = ({
   workoutData,
   setWorkoutData,
 }) => {
-  const [sets, setSets] = useState([{ weight: "", reps: "" }]);
+  const [sets, setSets] = useState([{ weight: "", reps: "", video: ""}]);
+  const [includeVideo, setIncludeVideo] = useState(false);
 
   const handleAddSet = () => {
     setSets([...sets, { weight: "", reps: "" }]);
@@ -327,6 +322,16 @@ const SingleMovement = ({
       <Text style={styles.singleMovementTitle}>
         {movement.name}
         <TouchableOpacity
+          onPress={() => setIncludeVideo(!includeVideo)}
+          style={styles.videoOnOffIcon}
+        >
+          {includeVideo ? (
+            <Feather name="video-off" size={24} color="black" />
+          ) : (
+            <Feather name="video" size={24} color="black" />
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
           onPress={() => handleRemoveMovement(movement)}
           style={styles.removeIcon}
         >
@@ -342,6 +347,7 @@ const SingleMovement = ({
           setNumber={index + 1}
           handleRemoveSet={() => handleRemoveSet(index)}
           handleSetOnChange={() => handleSetOnChange(index)}
+          includeVideo={includeVideo}
         />
       ))}
       <View>
@@ -362,40 +368,87 @@ const SingleSet = ({
   setNumber,
   handleRemoveSet,
   handleSetOnChange,
+  includeVideo,
 }) => {
   const { weight, reps } = set;
+  const [isRecording, setIsRecording] = useState(false);
+  const [recording, setRecording] = useState(null);
+  
+  const handleAddVideo = async () => {
+    try {
+      const { status } = await Camera.requestPermissionsAsync();
+      if (status === "granted") {
+        setIsRecording(true);
+        const recording = await Camera.recordAsync();
+        setRecording(recording);
+      }
+    } catch (error) {
+      console.log("Error: ", error);
+    }
+  };
+
+  const handleStopRecording = () => {
+    setIsRecording(false);
+  };
 
   return (
-    <View style={styles.singleMovementRow}>
-      <Text style={styles.singleMovementLabel}>{setNumber}.</Text>
-      <Text style={styles.singleMovementLabel}>Weight</Text>
-      <TextInput
-        style={styles.singleMovementInput}
-        value={weight}
-        onChangeText={(text) => setWeight(text)}
-        placeholder="Weight"
-        keyboardType="numeric"
-        placeholderTextColor="rgba(0, 0, 0, 0.5)"
-        onChange={handleSetOnChange}
-      />
-      <Text style={styles.singleMovementLabel}>Reps</Text>
-      <TextInput
-        style={styles.singleMovementInput}
-        value={reps}
-        onChangeText={(text) => setReps(text)}
-        placeholder="Reps"
-        keyboardType="numeric"
-        placeholderTextColor="rgba(0, 0, 0, 0.5)"
-        onChange={handleSetOnChange}
-      />
-      <TouchableOpacity onPress={handleRemoveSet}>
-        <Ionicons name="remove" size={24} color="black" />
-      </TouchableOpacity>
+    <View>
+      <View style={styles.singleMovementRow}>
+        <Text style={styles.singleMovementLabel}>{setNumber}.</Text>
+        <Text style={styles.singleMovementLabel}>Weight</Text>
+        <TextInput
+          style={styles.singleMovementInput}
+          value={weight}
+          onChangeText={(text) => setWeight(text)}
+          placeholder="Weight"
+          keyboardType="numeric"
+          placeholderTextColor="rgba(0, 0, 0, 0.5)"
+          onChange={handleSetOnChange}
+        />
+        <Text style={styles.singleMovementLabel}>Reps</Text>
+        <TextInput
+          style={styles.singleMovementInput}
+          value={reps}
+          onChangeText={(text) => setReps(text)}
+          placeholder="Reps"
+          keyboardType="numeric"
+          placeholderTextColor="rgba(0, 0, 0, 0.5)"
+          onChange={handleSetOnChange}
+        />
+        <TouchableOpacity onPress={handleRemoveSet}>
+          <Ionicons name="remove" size={24} color="black" />
+        </TouchableOpacity>
+      </View>
+      {includeVideo && (
+        <TouchableOpacity
+          style={styles.videoContainer}
+          onPress={handleAddVideo}
+        >
+          {isRecording ? (
+            <TouchableOpacity onPress={handleStopRecording}>
+              <Text style={{ fontSize: 20, color: "red" }}>Stop Recording</Text>
+            </TouchableOpacity>
+          ) : (
+            <Entypo name="video" size={24} color="black" />
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  videoOnOffIcon: {
+    position: "absolute",
+    right: 50,
+  },
+  videoContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 2,
+    marginBottom: 5,
+  },
   // Single Movement Styles
   singleMovementContainer: {
     flex: 1,
@@ -457,7 +510,7 @@ const styles = StyleSheet.create({
   },
   removeIcon: {
     position: "absolute",
-    right: 0,
+    right: 10,
   },
   // Add Movement Styles
   addMenu: {
